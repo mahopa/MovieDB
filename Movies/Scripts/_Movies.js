@@ -27,26 +27,25 @@ myApp.Ajax = function (method, urlArray, data, callback) {
                 callback(returnData);
             }
         }
-        else {console.log("Error: " + this.status);}
+        else { console.log("Error: " + this.status); }
     };
     call.onerror = function () { console.log("Errrrr"); };
     if (data) { call.send(JSON.stringify(data)); }
     else { call.send(); }
 };//Master Ajax
 myApp.WriteGallery = function () {
-    var holder ="<br/>";
+    var holder = "<br/>";
     for (var x in myApp.Movies) {
-        holder += myApp.Movies[x].title+" : ";
-        holder += myApp.Movies[x].director+" : ";
+        holder += "<div class='jumbotron form-inline' id='" + x + "'>";
+        holder += "<h1>"+myApp.Movies[x].title + "</h1>";
+        holder += myApp.Movies[x].director + " : ";
         holder += myApp.Movies[x].year;
-        holder += "<span class='btn btn-danger' onclick='myApp.deleteMovie(\""
+        holder += "<br/><span class='btn btn-danger' onclick='myApp.deleteMovie(\""
             + myApp.Movies[x].key
             + "\")'>Delete</span>";
         holder += "<span class='btn btn-warning' onclick='myApp.editMovie(\""
-        + myApp.Movies[x].key
-        + "\")'>Delete</span><br/>";
-            
-            
+        + x
+        + "\")'>Edit</span></div><br/>";
     }
     document.getElementById("Gallery").innerHTML = holder;
 
@@ -56,19 +55,19 @@ myApp.addMovie = function () {
     var title = document.getElementById("Title").value;
     var director = document.getElementById("Director").value;
     var year = document.getElementById("Year").value;
-   var movie = new myApp.Movie(title, director, year);
-   myApp.Ajax(
-       "POST",
-       ['Movies'],
-       movie,
-       function (data) {
-           movie.key = data.name;
-           myApp.Movies.push(movie);
-           myApp.WriteGallery();
-       });
-   document.getElementById("Title").value = "";
-   document.getElementById("Director").value = "";
-   document.getElementById("Year").value = "";
+    var movie = new myApp.Movie(title, director, year);
+    myApp.Ajax(
+        "POST",
+        ['Movies'],
+        movie,
+        function (data) {
+            movie.key = data.name;
+            myApp.Movies.push(movie);
+            myApp.WriteGallery();
+        });
+    document.getElementById("Title").value = "";
+    document.getElementById("Director").value = "";
+    document.getElementById("Year").value = "";
 };//C-Fires when we click Add Movie
 myApp.deleteMovie = function (key) {
     myApp.Ajax("DELETE",
@@ -76,17 +75,44 @@ myApp.deleteMovie = function (key) {
         null,
         function () {
             for (var x in myApp.Movies) {
-                if(myApp.Movies[x].key == key){
+                if (myApp.Movies[x].key == key) {
                     myApp.Movies.splice(x, 1);
                 }
             }
             myApp.WriteGallery();
         });
-        
+
 };//D-Fires when we click delete
-myApp.editMovie = function () { };//U-Fires When we click edit
+myApp.editMovie = function (index) {
+    var key = myApp.Movies[index].key;
+    var title = myApp.Movies[index].title;
+    var director = myApp.Movies[index].director;
+    var year = myApp.Movies[index].year;
+    var holder = '<input class="form-control" type="text" id="TitleE"  value="' + title + '" />'
+    holder += '<input class="form-control" type="text" id="DirectorE"  value="' + director + '" />'
+    holder += '<input class="form-control" type="text" id="YearE"  value="' + year + '" />'
+    holder += "<span class='btn btn-success' onclick=myApp.saveEdit('" +
+        key + "','" + index +
+        "')>Save</span>&nbsp;";
+    holder+= "<span class='btn btn-info' onclick='myApp.WriteGallery()'>Cancel</span>"
+    document.getElementById(index).innerHTML = holder;
+
+};//U-Fires When we click edit
+myApp.saveEdit = function (key, index) {
+    var title = document.getElementById("TitleE").value;
+    var director = document.getElementById("DirectorE").value;
+    var year = document.getElementById("YearE").value;
+    var movie = new myApp.Movie(title, director, year);
+    myApp.Ajax("PATCH",
+        ["Movies", key],
+        movie,
+        function () {
+            myApp.Movies[index] = movie;
+            myApp.WriteGallery();
+        });
+}
 myApp.getMovies = function () {
-    myApp.Ajax("GET",["Movies"], null, myApp.fillArray );
+    myApp.Ajax("GET", ["Movies"], null, myApp.fillArray);
 };//Gets movies from Firebase
 myApp.fillArray = function (data) {
     myApp.Movies = [];
